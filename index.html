@@ -14,7 +14,6 @@
 	--badge-bg:#eef2ff; --badge-text:#1f2937; --kbd-bg:#111827; --kbd-text:#ffffff;
 	color-scheme: light;
 
-	/* Mapeo widget */
 	--fg: var(--text);
 	--accent: var(--azul);
 	--accent-weak: var(--badge-bg);
@@ -27,12 +26,16 @@
 	--gap: clamp(6px, 1.2vw, 8px);
 	--round: clamp(8px, 1.6vw, 12px);
 	--dot: clamp(22px, 5.5vw, 32px);
+
+	/* Mini-controles (vista Fecha) */
+	--mini-size: 24px;
+	--mini-pad: 2px;
+	--mini-gap: 4px;
 }
 
 /* Paleta base (dark) — tu paleta tal cual */
 :root[data-theme="dark"]{
-	--bg:#191919;
-	--text:#e5e7eb; --muted:#c7cbd1; --muted-2:#9aa0a6;
+	--bg:#191919; --text:#e5e7eb; --muted:#c7cbd1; --muted-2:#9aa0a6;
 	--card:#12161b; --border:#232a32; --shadow:0 2px 8px rgba(0,0,0,.35);
 	--azul:#3b82f6; --amarillo:#f59e0b; --verde:#22c55e; --rojo:#f43f5e;
 	--gris:#1a1f25; --btn:#1a1f25; --btn-text:#e5e7eb;
@@ -43,13 +46,15 @@
 	--accent: var(--azul);
 	--accent-weak: var(--badge-bg);
 	--hover: color-mix(in srgb, var(--btn) 85%, var(--accent) 15%);
-
 	--fs: clamp(10px, 1.6vw, 14px);
 	--fs-small: clamp(10px, 1.3vw, 12px);
 	--pad: clamp(6px, 1.2vw, 10px);
 	--gap: clamp(6px, 1.2vw, 8px);
 	--round: clamp(8px, 1.6vw, 12px);
 	--dot: clamp(22px, 5.5vw, 32px);
+	--mini-size: 24px;
+	--mini-pad: 2px;
+	--mini-gap: 4px;
 }
 
 /* Base */
@@ -57,7 +62,7 @@
 html, body { height: 100%; margin: 0; font-family: ui-sans-serif, -apple-system, Segoe UI, Roboto, Inter, system-ui, Arial; background: var(--bg); color: var(--fg); }
 .wrapper { max-width: 100%; margin: 0 auto; padding: var(--pad); font-size: var(--fs); }
 
-/* Header adaptable */
+/* Header */
 .header {
 	display: grid;
 	grid-template-columns: 1fr auto auto; /* select | theme | toggle */
@@ -74,6 +79,7 @@ html, body { height: 100%; margin: 0; font-family: ui-sans-serif, -apple-system,
 	.view-toggle-header { grid-column: 1 / -1; justify-self: start; }
 }
 
+/* Controles generales */
 .select { display: flex; gap: var(--gap); align-items: center; min-width: 0; }
 select, button {
 	background: var(--btn);
@@ -87,7 +93,6 @@ select, button {
 button { cursor: pointer; }
 button:hover, select:hover { background: var(--hover); }
 
-/* Botón tema */
 .theme-toggle {
 	display: inline-flex; gap: calc(var(--gap) - 2px); align-items: center;
 	border: 1px solid var(--border);
@@ -96,14 +101,12 @@ button:hover, select:hover { background: var(--hover); }
 	background: var(--btn); color: var(--btn-text);
 }
 
-/* Toggle pequeño sin texto (iconos) */
+/* Toggle pequeño sin texto (iconos) en header */
 .view-toggle-header {
 	display: inline-flex; align-items: center; gap: 4px;
 	border: 1px solid var(--border);
-	background: var(--btn);
-	color: var(--btn-text);
-	border-radius: 999px;
-	padding: 3px;
+	background: var(--btn); color: var(--btn-text);
+	border-radius: 999px; padding: 3px;
 }
 .view-toggle-header button {
 	border: none; background: transparent; padding: 6px;
@@ -111,9 +114,7 @@ button:hover, select:hover { background: var(--hover); }
 	display: inline-flex; align-items: center; justify-content: center;
 }
 .view-toggle-header button[aria-pressed="true"] {
-	background: var(--accent-weak);
-	color: var(--fg);
-	outline: 1px solid var(--border);
+	background: var(--accent-weak); color: var(--fg); outline: 1px solid var(--border);
 }
 
 /* Calendario */
@@ -121,8 +122,7 @@ button:hover, select:hover { background: var(--hover); }
 	margin-top: var(--gap);
 	border: 1px solid var(--border);
 	border-radius: calc(var(--round) + 0px);
-	overflow: hidden;
-	background: transparent;
+	overflow: hidden; background: transparent;
 }
 .weekdays, .days { display: grid; grid-template-columns: repeat(7, 1fr); }
 .weekdays div {
@@ -152,7 +152,7 @@ button:hover, select:hover { background: var(--hover); }
 	background: transparent;
 	padding: calc(var(--pad) + 2px);
 	display: none;
-	position: relative; /* para posicionar controles flotantes */
+	position: relative; /* para posicionar los mini-controles */
 }
 .date-only .line {
 	display: flex; align-items: baseline; justify-content: center; gap: 10px; flex-wrap: wrap;
@@ -174,34 +174,42 @@ button:hover, select:hover { background: var(--hover); }
 	text-transform: uppercase; letter-spacing: .04em;
 }
 
-/* Ocultar selects en vista Fecha */
-[data-view="date"] .header .select { display: none !important; }
+/* Ocultar selectores, tema y toggle del header cuando data-view=date */
+[data-view="date"] .header .select,
+[data-view="date"] .header .theme-toggle,
+[data-view="date"] .header .view-toggle-header { display: none !important; }
 
-/* Controles flotantes en vista Fecha: ocultos y aparecen abajo-derecha al hover */
+/* Forzar visibilidad correcta de contenedores por si el host inyecta estilos */
+[data-view="date"] #calendarView { display: none !important; }
+[data-view="date"] #dateOnlyView { display: block !important; }
+
+/* Mini-controles en vista Fecha: abajo a la derecha, más pequeños */
 .date-floating-controls {
 	position: absolute; right: 8px; bottom: 8px;
-	display: flex; gap: 8px; align-items: center;
+	display: flex; gap: var(--mini-gap); align-items: center;
 	opacity: 0; pointer-events: none; transform: translateY(4px);
 	transition: opacity .18s ease, transform .18s ease;
 }
 .date-only:hover .date-floating-controls {
 	opacity: 1; pointer-events: auto; transform: translateY(0);
 }
-.date-floating-controls .theme-toggle,
-.date-floating-controls .view-toggle-mini {
-	background: var(--btn); color: var(--btn-text); border: 1px solid var(--border);
-}
-.view-toggle-mini {
-	display: inline-flex; align-items: center; gap: 4px;
-	border-radius: 999px; padding: 3px;
+.view-toggle-mini, .theme-toggle-mini {
+	display: inline-flex; align-items: center;
+	border: 1px solid var(--border);
+	background: var(--btn); color: var(--btn-text);
+	border-radius: 999px; padding: var(--mini-pad);
 }
 .view-toggle-mini button {
-	border: none; background: transparent; padding: 6px;
-	border-radius: 999px; width: 28px; height: 28px;
+	border: none; background: transparent; padding: 4px;
+	border-radius: 999px; width: var(--mini-size); height: var(--mini-size);
 	display: inline-flex; align-items: center; justify-content: center;
 }
 .view-toggle-mini button[aria-pressed="true"] {
 	background: var(--accent-weak); color: var(--fg); outline: 1px solid var(--border);
+}
+.theme-toggle-mini {
+	padding: var(--mini-pad) calc(var(--mini-pad) + 2px);
+	font-size: 11px; line-height: 1; border-radius: 999px;
 }
 
 /* Accesibilidad oculta */
@@ -251,7 +259,7 @@ button:hover, select:hover { background: var(--hover); }
 		<div class="days" id="days"></div>
 	</div>
 
-	<!-- Vista Fecha sola con controles ocultos que aparecen abajo-derecha al hover -->
+	<!-- Vista Fecha sola con mini-controles abajo a la derecha -->
 	<div class="date-only" id="dateOnlyView" aria-live="polite" aria-atomic="true">
 		<div class="line">
 			<span id="weekdayText" class="weekday">MARTES</span>
@@ -259,19 +267,18 @@ button:hover, select:hover { background: var(--hover); }
 			<span id="monthYear" class="month-year"><span id="monthText">OCTUBRE</span><span id="yearText">2025</span></span>
 		</div>
 
-		<!-- Controles flotantes: tema y toggle mini, ocultos por defecto -->
 		<div class="date-floating-controls">
 			<!-- Toggle mini -->
 			<div class="view-toggle-mini" role="group" aria-label="Cambiar vista">
 				<button id="viewCalDate" aria-pressed="false" aria-label="Vista calendario" title="Calendario">
-					<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 2a1 1 0 0 1 1 1v1h8V3a1 1 0 1 1 2 0v1h1a3 3 0 0 1 3 3v11a3 3 0 0 1-3 3H5a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3h1V3a1 1 0 0 1 1-1Zm13 9H4v9a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-9ZM5 7a1 1 0 0 0-1 1v1h16V8a1 1 0 0 0-1-1H5Z"/></svg>
+					<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 2a1 1 0 0 1 1 1v1h8V3a1 1 0 1 1 2 0v1h1a3 3 0 0 1 3 3v11a3 3 0 0 1-3 3H5a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3h1V3a1 1 0 0 1 1-1Zm13 9H4v9a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-9ZM5 7a1 1 0 0 0-1 1v1h16V8a1 1 0 0 0-1-1H5Z"/></svg>
 				</button>
 				<button id="viewDateDate" aria-pressed="true" aria-label="Vista fecha" title="Fecha">
-					<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20Zm1 5h-2v6l5 3 1-1.732-4-2.268V7Z"/></svg>
+					<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20Zm1 5h-2v6l5 3 1-1.732-4-2.268V7Z"/></svg>
 				</button>
 			</div>
-			<!-- Tema -->
-			<button id="themeFloating" class="theme-toggle" aria-label="Cambiar tema flotante" title="Tema">
+			<!-- Tema mini -->
+			<button id="themeFloating" class="theme-toggle-mini" aria-label="Cambiar tema" title="Tema">
 				<span id="themeLabelFloating">Light</span>
 			</button>
 		</div>
@@ -291,13 +298,11 @@ button:hover, select:hover { background: var(--hover); }
 	const yearSel = document.getElementById('year');
 	const daysEl = document.getElementById('days');
 
-	// Tema
 	const themeBtn = document.getElementById('theme');
 	const themeLabel = document.getElementById('themeLabel');
 	const themeFloatingBtn = document.getElementById('themeFloating');
 	const themeLabelFloating = document.getElementById('themeLabelFloating');
 
-	// Toggles
 	const viewCalHeader = document.getElementById('viewCalHeader');
 	const viewDateHeader = document.getElementById('viewDateHeader');
 	const viewCalDate = document.getElementById('viewCalDate');
@@ -311,6 +316,7 @@ button:hover, select:hover { background: var(--hover); }
 	const yearText = document.getElementById('yearText');
 
 	function now() { return new Date(); }
+
 	let state = {
 		month: now().getMonth(),
 		year: now().getFullYear(),
@@ -330,8 +336,7 @@ button:hover, select:hover { background: var(--hover); }
 	}
 	function setTheme(t) {
 		root.setAttribute('data-theme', t === 'dark' ? 'dark' : 'light');
-		state.theme = t;
-		syncThemeLabels();
+		state.theme = t; syncThemeLabels();
 	}
 	function toggleTheme() { setTheme(state.theme === 'light' ? 'dark' : 'light'); }
 
@@ -340,18 +345,17 @@ button:hover, select:hover { background: var(--hover); }
 		localStorage.setItem('calendar:view', state.view);
 		const isCalendar = state.view === 'calendar';
 
-		// Mostrar/ocultar vistas
-		calendarView.style.display = isCalendar ? '' : 'none';
-		dateOnlyView.style.display = isCalendar ? 'none' : '';
-
-		// Atributo para CSS: oculta selects en vista fecha
+		// Atributo global para CSS
 		root.setAttribute('data-view', state.view);
 
-		// Sincronizar botones
-		viewCalHeader.setAttribute('aria-pressed', isCalendar ? 'true' : 'false');
-		viewDateHeader.setAttribute('aria-pressed', isCalendar ? 'false' : 'true');
-		viewCalDate.setAttribute('aria-pressed', isCalendar ? 'true' : 'false');
-		viewDateDate.setAttribute('aria-pressed', isCalendar ? 'false' : 'true');
+		// Mostrar/ocultar contenedores (defensa ante estilos del host)
+		calendarView.style.display = isCalendar ? '' : 'none';
+		dateOnlyView.style.display = isCalendar ? 'none' : 'block';
+
+		// Sincronizar toggles
+		[[viewCalHeader, isCalendar],[viewDateHeader, !isCalendar],[viewCalDate, isCalendar],[viewDateDate, !isCalendar]].forEach(([btn, on])=>{
+			if (btn) btn.setAttribute('aria-pressed', on ? 'true':'false');
+		});
 
 		updateDateOnly();
 	}
@@ -373,7 +377,6 @@ button:hover, select:hover { background: var(--hover); }
 		setTimeout(() => { updateDateOnly(); scheduleMidnightUpdate(); }, msToMidnight);
 	}
 
-	// Render calendario del mes/año en estado
 	function render() {
 		monthSel.value = state.month;
 		yearSel.value = state.year;
@@ -382,7 +385,7 @@ button:hover, select:hover { background: var(--hover); }
 		const first = new Date(state.year, state.month, 1);
 		const firstWeekday = (first.getDay() + 6) % 7; // 0 = Lunes
 		const daysInMonth = new Date(state.year, state.month + 1, 0).getDate();
-	 const prevMonthDays = new Date(state.year, state.month, 0).getDate();
+		const prevMonthDays = new Date(state.year, state.month, 0).getDate();
 
 		const t = now();
 		const totalCells = 42;
@@ -401,28 +404,21 @@ button:hover, select:hover { background: var(--hover); }
 		}
 	}
 
-	// Eventos selects
+	// Eventos
 	monthSel.addEventListener('change', () => { state.month = parseInt(monthSel.value, 10); render(); });
 	yearSel.addEventListener('change', () => { state.year = parseInt(yearSel.value, 10); render(); });
-
-	// Eventos toggles vista
-	const toCalendar = () => setView('calendar');
-	const toDate = () => setView('date');
-	viewCalHeader.addEventListener('click', toCalendar);
-	viewDateHeader.addEventListener('click', toDate);
-	viewCalDate.addEventListener('click', toCalendar);
-	viewDateDate.addEventListener('click', toDate);
-
-	// Eventos tema
+	viewCalHeader.addEventListener('click', () => setView('calendar'));
+	viewDateHeader.addEventListener('click', () => setView('date'));
+	viewCalDate.addEventListener('click', () => setView('calendar'));
+	viewDateDate.addEventListener('click', () => setView('date'));
 	themeBtn.addEventListener('click', toggleTheme);
 	themeFloatingBtn.addEventListener('click', toggleTheme);
 
 	// Inicialización
 	setTheme(state.theme);
-	// Siempre comenzar calendario en mes/año actuales
 	const d0 = now(); state.month = d0.getMonth(); state.year = d0.getFullYear();
 	render();
-	setView(state.view); // recuerda solo la vista, no el mes/año
+	setView(state.view);   // recuerda solo la vista
 	updateDateOnly();
 	scheduleMidnightUpdate();
 })();
