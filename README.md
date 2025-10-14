@@ -1,2 +1,2 @@
-# SIMPLE_CALENDAR_PLUS
-A simple calendar + day_date widget, ready to embed in Notion.
+# SIMPLE_DAY
+A simple day displayer widget, ready to embed in Notion.
